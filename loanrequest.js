@@ -313,7 +313,7 @@ function generateRandomData(type, length = 10) {
   }
 }
 
-async function selectRandomOption(page, selector, delay = 1500) {
+async function selectRandomOption(page, selector, delay = 1100) {
   const selectElement = page.locator(selector);
 
   // รอให้ <select> element โหลดอย่างสมบูรณ์
@@ -386,6 +386,8 @@ function generateRandomDate() {
     }
   }
   /////
+  await selectRandomOption(page, 'select#company_name');
+  await selectRandomOption(page, 'select#bt_code');
   await page.getByLabel('ประเภทลูกค้า (กู้-ค้ำ) *').selectOption('bor');
   await page.getByLabel('วัตถุประสงค์ขอสินเชื่อ *').selectOption('1|20');
   await page.getByLabel('ระบุเหตุผล *').click();
@@ -875,10 +877,8 @@ await page.evaluate(() => {
 
 await page.fill("#car_current_ownership0", generateRandomData('text',5) + " " +  generateRandomData('text',5));
 
-
-
-await selectRandomOption(page, 'select#bt_code');
-await selectRandomOption(page, 'select#installment_per');
+// await selectRandomOption(page, 'select#bt_code');
+// await selectRandomOption(page, 'select#installment_per');
 await selectRandomOption(page, 'select#perloan_amount');
 await selectRandomOption(page, 'select#loan_apply');
 
@@ -906,8 +906,9 @@ await page.fill("#bor_bank", generateRandomData('text',10));
 await page.fill("#bor_branch", generateRandomData('text',10));
 await page.fill("#bor_accnum",  generateRandomData('number',10));
 
-await page.locator('div').filter({ hasText: 'บันทึกข้อมูล' }).nth(4).click();
-await page.getByRole('button', { name: 'บันทึกข้อมูล' }).click();
+await page.pause();
+// await page.locator('div').filter({ hasText: 'บันทึกข้อมูล' }).nth(4).click();
+// await page.getByRole('button', { name: 'บันทึกข้อมูล' }).click();
 const successMessageSelector = '.ajs-dialog .ajs-body .ajs-content';
 
 // รอให้ข้อความบันทึกข้อมูลสำเร็จแสดง
@@ -953,8 +954,8 @@ sendPhotoToTelegram(screenshotPath2);
 };
 
 // Run the task immediately and then every 5 minutes
-performTask();
-setInterval(performTask, 5 * 60 * 1000); // 5 minutes in milliseconds
-module.exports = {
-  performTask
-};
+// performTask();
+// setInterval(performTask, 5 * 60 * 1000); // 5 minutes in milliseconds
+// module.exports = {
+//   performTask
+// };
