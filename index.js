@@ -45,6 +45,32 @@ app.post("/api/action", async (req, res) => {
   }
 });
 
+app.post("/api/actionLand", async (req, res) => {
+  try {
+    const browser = await chromium.launch({ headless: false }); // Adjust headless option as needed
+    const page = await browser.newPage();
+
+    // await performActionWithPage(page);
+
+    try {
+      // Call function or logic from loanrequest.js
+      await loanRequestHandler.performTask(); // ตั้งชื่อฟังก์ชันหรือโค้ดที่ต้องการเรียกใช้
+  
+      res.json({ message: 'Action completed successfully' });
+    } catch (error) {
+      console.error('Error:', error);
+      res.status(500).json({ message: 'An error occurred' });
+    }
+
+    await browser.close(); // Ensure browser closure
+
+    res.json({ message: "Action completed successfully" });
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ message: "An error occurred" });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
 });

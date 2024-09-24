@@ -212,6 +212,9 @@ async function performTask() {
   await page.goto("https://ams3.prachakij.com/login_webconnect/6501007");
   await page.goto("https://ams3.prachakij.com/adminAMS");
   await page.goto("https://ams3.prachakij.com/loanRequestOnline");
+
+  await page.pause(); // รอเอาออก
+  
 /////////
 
 function generateRandomBankData(type) {
