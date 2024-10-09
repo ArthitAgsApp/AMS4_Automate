@@ -6,9 +6,11 @@ const port = process.env.PORT || 3000; // Use environment variable or default to
 
 // Import loanrequest.js
 const loanRequestHandler = require('./loanrequest.js');
+const loanRequestLandHandler = require('./loanrequestland.js');
 
 async function performActionWithPage(page) {
   // Replace this with your actual actions on the page
+  console.log(typeof loanRequestHandler.performTask);
   await page.goto("https://ams3.prachakij.com/adminAMS"); // Assuming login is handled elsewhere
 
   // Example action: Click a button
@@ -22,12 +24,13 @@ async function performActionWithPage(page) {
 app.post("/api/action", async (req, res) => {
   try {
     const browser = await chromium.launch({ headless: false }); // Adjust headless option as needed
-    const page = await browser.newPage();
+    // const page = await browser.newPage();
 
     // await performActionWithPage(page);
 
     try {
       // Call function or logic from loanrequest.js
+      console.log('..Loan-Car..');
       await loanRequestHandler.performTask(); // ตั้งชื่อฟังก์ชันหรือโค้ดที่ต้องการเรียกใช้
   
       res.json({ message: 'Action completed successfully' });
@@ -48,13 +51,14 @@ app.post("/api/action", async (req, res) => {
 app.post("/api/actionLand", async (req, res) => {
   try {
     const browser = await chromium.launch({ headless: false }); // Adjust headless option as needed
-    const page = await browser.newPage();
+    // const page = await browser.newPage();
 
     // await performActionWithPage(page);
 
     try {
       // Call function or logic from loanrequest.js
-      await loanRequestHandler.performTask(); // ตั้งชื่อฟังก์ชันหรือโค้ดที่ต้องการเรียกใช้
+      console.log('..Loan-Land..');
+      await loanRequestLandHandler.performTask(); // ตั้งชื่อฟังก์ชันหรือโค้ดที่ต้องการเรียกใช้
   
       res.json({ message: 'Action completed successfully' });
     } catch (error) {

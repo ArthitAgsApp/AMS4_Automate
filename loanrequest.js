@@ -213,7 +213,6 @@ async function performTask() {
   await page.goto("https://ams3.prachakij.com/adminAMS");
   await page.goto("https://ams3.prachakij.com/loanRequestOnline");
 
-  await page.pause(); // รอเอาออก
   
 /////////
 
@@ -391,6 +390,7 @@ function generateRandomDate() {
   /////
   await selectRandomOption(page, 'select#company_name');
   await selectRandomOption(page, 'select#bt_code');
+  await page.pause(); // รอเอาออก
   await page.getByLabel('ประเภทลูกค้า (กู้-ค้ำ) *').selectOption('bor');
   await page.getByLabel('วัตถุประสงค์ขอสินเชื่อ *').selectOption('1|20');
   await page.getByLabel('ระบุเหตุผล *').click();
@@ -959,6 +959,6 @@ sendPhotoToTelegram(screenshotPath2);
 // Run the task immediately and then every 5 minutes
 // performTask();
 // setInterval(performTask, 5 * 60 * 1000); // 5 minutes in milliseconds
-// module.exports = {
-//   performTask
-// };
+module.exports = {
+  performTask
+};

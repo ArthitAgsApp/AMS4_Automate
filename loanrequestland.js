@@ -157,7 +157,7 @@ function getRandomDate() {
     // คำนวณจำนวนวันในเดือน
     const daysInMonth = new Date(year, month, 0).getDate();
 
-    // สุ่มวัน (1 ถึงจำนวนวันที่มีในเดือน)
+    // สุ่มวัน (1 ถึงจำนวนวันที่มีในเดือน) 
     const day = Math.floor(Math.random() * daysInMonth) + 1;
 
     // สร้างวันที่ในรูปแบบ YYYY-MM-DD
@@ -212,8 +212,6 @@ async function performTask() {
   await page.goto("https://ams3.prachakij.com/login_webconnect/6501007");
   await page.goto("https://ams3.prachakij.com/adminAMS");
   await page.goto("https://ams3.prachakij.com/loanRequestOnline");
-
-  await page.pause(); // รอเอาออก
   
 /////////
 
@@ -301,6 +299,17 @@ function generateRandomData(type, length = 10) {
     return result;
   }
 
+  // ฟังก์ชันสุ่มเลขที่ดิน
+  function generateRandomLandnum(length) {
+    let result = '';
+    for (let i = 0; i < length; i++) {
+      result += Math.floor(Math.random() * 10); // สุ่มตัวเลข 0-9
+    }
+    land_text = generateRandomText(8);
+    result = land_text+' '+result;
+    return result;
+  }
+
   switch (type) {
     case 'text':
       return generateRandomText(length);
@@ -311,12 +320,15 @@ function generateRandomData(type, length = 10) {
     case 'mixed':
       return Math.random() > 0.5 ? generateRandomText(length) : generateRandomNumber(length);
 
+    case 'land':
+      return generateRandomLandnum(length);
+
     default:
       throw new Error('Invalid type. Choose from: text, number, mixed');
   }
 }
 
-async function selectRandomOption(page, selector, delay = 1100) {
+async function selectRandomOption(page, selector, delay = 780) {
   const selectElement = page.locator(selector);
 
   // รอให้ <select> element โหลดอย่างสมบูรณ์
@@ -388,6 +400,31 @@ function generateRandomDate() {
       }
     }
   }
+
+  async function checkAndFillLandBook(page) {
+    // ตรวจสอบค่าใน #land_book0
+    let landBookValue = await page.inputValue("#land_book0");
+  
+    // ถ้าไม่มีค่าในช่อง #land_book0 ให้ทำการกรอกใหม่
+    if (!landBookValue) {
+      console.log("No value in #land_book0, filling it again...");
+      await page.fill("#land_book0", generateRandomData('number', 2));
+      await page.waitForTimeout(200);
+  
+      // ตรวจสอบอีกครั้งหลังจากกรอกข้อมูลใหม่
+      landBookValue = await page.inputValue("#land_book0");
+  
+      if (!landBookValue) {
+        console.error("Failed to fill #land_book0");
+      } else {
+        console.log("Successfully filled #land_book0");
+      }
+    } else {
+      console.log("Value exists in #land_book0:", landBookValue);
+    }
+  }
+
+
   /////
   await selectRandomOption(page, 'select#company_name');
   await selectRandomOption(page, 'select#bt_code');
@@ -492,7 +529,7 @@ await page.waitForTimeout(1000);
   await page.fill("#old_money_approve", generateRandomData('number',4));
   await page.fill("#old_installment", generateRandomData('number',4));
   await page.waitForTimeout(1000);
-///////ที่อยู๋
+/////ที่อยู๋
 
 await page.fill("#regist_number", generateRandomData('number',2));
 await page.fill("#regist_room", generateRandomData('number',2));
@@ -539,14 +576,31 @@ await page.fill("#current_moo",generateRandomData('number',2));
 await page.fill("#current_soi", generateRandomData('text',10));
 
 await page.fill("#current_road",generateRandomData('text',2));
+
 await page.click('#current_province');
 await selectRandomOption(page, 'select#current_province');
 
-await page.click('#current_city');
-await selectRandomOption(page, 'select#current_city');
+// await page.click('#current_city');
+// await selectRandomOption(page, 'select#current_city');
 
-await page.click('#current_district');
-await selectRandomOption(page, 'select#current_district');
+// await page.click('#current_district');
+// await selectRandomOption(page, 'select#current_district');
+
+let cityValue = "0";
+let districtValue = "0";
+// เลือก city
+do {
+  await page.click('#current_city');
+  await selectRandomOption(page, 'select#current_city');
+  cityValue = await page.$eval('#current_city', el => el.value);
+} while (cityValue === "0");
+
+// เลือก district
+do {
+  await page.click('#current_district');
+  await selectRandomOption(page, 'select#current_district');
+  districtValue = await page.$eval('#current_district', el => el.value);
+} while (districtValue === "0");
 
 await page.fill("#current_postcode",generateRandomData('number',5));
 await page.fill("#current_mobile1", generateThaiPhoneNumber());
@@ -738,147 +792,120 @@ await page.fill("#contact2_email", generateRandomData('number',8)+"@gamil.com");
 
 await page.click('#guarantee_select');
 
-await page.selectOption('#guarantee_select', 'รถ');
-await page.waitForTimeout(1000);
-await page.fill("#car_strid0", generateRandomData('mixed',8));
-await page.waitForTimeout(1000);
-await page.click('#car_type0');
-await page.waitForTimeout(1000);
-await page.selectOption('#car_type0', "1|3");
-await page.waitForTimeout(1000);
+// ที่ดิน
+await page.getByText('เอกสารประกอบการพิจารณา *').click();
+await page.getByLabel('เอกสารประกอบการพิจารณา *').selectOption('ที่ดิน');
 
+await selectRandomOption(page, 'select#land_type0');
 
+await selectRandomOption(page, 'select#land_province0');
 
-await page.fill("#car_reg0", generateRandomData('number',5));
+await selectRandomOption(page, 'select#land_city0');
 
+await selectRandomOption(page, 'select#land_district0');
+await page.waitForTimeout(800);
+await page.fill("#land_deed0", generateRandomData('land',4));
+await page.waitForTimeout(200);
 
-await page.click('#car_reg_province0');
-await selectRandomOption(page, 'select#car_reg_province0');
+// await page.fill("#land_book0", generateRandomData('number',2));
+let land_book = '';
+do {
+  await page.click('#land_book0');
+  await page.fill("#land_book0", generateRandomData('number',2));
+  land_book = await page.$eval('#land_book0', el => el.value);
+} while (land_book === "");
+// await page.waitForTimeout(200);
+// await page.fill("#land_page0", generateRandomData('number',4));
+let land_page = '';
+do {
+  await page.click('#land_page0');
+  await page.fill("#land_page0", generateRandomData('number',4));
+  land_page = await page.$eval('#land_page0', el => el.value);
+} while (land_page === '');
+// await page.waitForTimeout(200);
+// await page.fill("#land_number0", generateRandomData('number',4));
+let land_number = '';
+do {
+  await page.click('#land_number0');
+  await page.fill("#land_number0", generateRandomData('number',4));
+  land_number = await page.$eval('#land_number0', el => el.value);
+} while (land_number === "");
+// await page.waitForTimeout(200);
+// await page.fill("#land_rawang0", generateRandomData('number',4));
+let land_rawang = '';
+do {
+  await page.click('#land_rawang0');
+  await page.fill("#land_rawang0", generateRandomData('number',4));
+  land_rawang = await page.$eval('#land_rawang0', el => el.value);
+} while (land_rawang === "");
+// await page.waitForTimeout(200);
+// await page.fill("#land_survey0", generateRandomData('number',6));
+let land_survey = '';
+do {
+  await page.click('#land_survey0');
+  await page.fill("#land_survey0", generateRandomData('number',6));
+  land_survey = await page.$eval('#land_survey0', el => el.value);
+} while (land_survey === "");
+// await page.waitForTimeout(200);
+// await page.fill("#land_area0", generateRandomData('number',4));
+let land_area = '';
+do {
+  await page.click('#land_area0');
+  await page.fill("#land_area0", generateRandomData('number',4));
+  land_area = await page.$eval('#land_area0', el => el.value);
+} while (land_area === "");
+// await page.waitForTimeout(200);
+await checkAndFillLandBook(page); // เรียกฟังก์ชันตรวจสอบและกรอกข้อมูลใน #land_book0
 
+await selectRandomOption(page, 'select#land_building0');
+await selectRandomOption(page, 'select#land_shape0');
+await selectRandomOption(page, 'select#land_use0');
+await selectRandomOption(page, 'select#land_apply0');
+await selectRandomOption(page, 'select#land_prosperity0');
+await selectRandomOption(page, 'select#land_location0');
+await selectRandomOption(page, 'select#land_road0');
+await selectRandomOption(page, 'select#land_road_status0');
+await selectRandomOption(page, 'select#land_public_utility0');
+await selectRandomOption(page, 'select#land_return0');
+await selectRandomOption(page, 'select#land_load0');
 
+await page.getByText('วันที่ครอบครอง', { exact: true }).click();
 
-
-await page.click('#car_year0');
-await selectRandomOption(page, 'select#car_year0');
-
-await page.waitForTimeout(1000);
-
-
-await page.click('#car_brand0');
-await page.waitForTimeout(1000);
-await page.selectOption('#car_brand0', "1|9");
-await page.waitForTimeout(1000);
-await page.click('#car_model0');
-await selectRandomOption(page, 'select#car_model0');
-await page.click('#car_year0');
-await selectRandomOption(page, 'select#car_year0');
-await page.waitForTimeout(1000);
-await page.click('#car_brand0');
-await page.waitForTimeout(1000);
-await page.selectOption('#car_brand0', "1|9");
-await page.click('#car_year0');
-await selectRandomOption(page, 'select#car_year0');
-await page.waitForTimeout(1000);
-await page.click('#car_model0');
-await selectRandomOption(page, 'select#car_model0');
-
-await page.waitForTimeout(1000);
-await page.click('#crt_id0');
-await selectRandomOption(page, 'select#crt_id0');
-
-await page.click('#car_national0');
-await selectRandomOption(page, 'select#car_national0');
-await page.waitForTimeout(1000);
-await page.fill("#crt_num0",  generateRandomData('number',5));
-
-await page.click('#cart_id0');
-await page.waitForTimeout(1000);
-await selectRandomOption(page, 'select#cart_id0');
-
-await page.waitForTimeout(1000);
-
-
-await page.click('#engine_brand0');
-await selectRandomOption(page, 'select#engine_brand0');
-
-
-
-await page.waitForTimeout(1000);
-
-await page.click('#fuel0');
-await selectRandomOption(page, 'select#fuel0');
-
-await page.waitForTimeout(1000);
-
-await page.fill("#car_engine0",  generateRandomData('mixed',13));
-
-
-await page.evaluate(() => {
-  const dateInput = document.getElementById('car_reg_date0');
+ // เปิดค่า readonly attribute ของ input `#land_date_possession0`
+ await page.evaluate(() => {
+  const dateInput = document.getElementById('land_date_possession0');
   dateInput.removeAttribute('readonly');
 });
-
 // คลิกเพื่อเปิด date picker
-await page.click('#car_reg_date0');
-
-// เลือกวันที่ใน date picker (ปรับตาม date picker ที่คุณใช้)
-// สมมติว่าเลือกวันที่เป็น input
-await page.type('#car_reg_date0', getRandomDate()); // ตัวอย่างการกรอกวันที่
-
+await page.click('#land_date_possession0');
+await page.type('#land_date_possession0',getRandomDate()); // ตัวอย่างการกรอกวันที่
 // ใส่ readonly attribute กลับ
 await page.evaluate(() => {
-  const dateInput = document.getElementById('car_reg_date0');
+  const dateInput = document.getElementById('land_date_possession0');
   dateInput.setAttribute('readonly', '');
 });
+await page.waitForTimeout(500);
 
-await page.click('#car_color0');
-await selectRandomOption(page, 'select#car_color0');
-
-
-
-
-
-await page.evaluate(() => {
-  const dateInput = document.getElementById('car_date_possession0');
+ // เปิดค่า readonly attribute ของ input `#land_date_ownership0`
+ await page.evaluate(() => {
+  const dateInput = document.getElementById('land_date_ownership0');
   dateInput.removeAttribute('readonly');
 });
-
 // คลิกเพื่อเปิด date picker
-await page.click('#car_date_possession0');
-
-// เลือกวันที่ใน date picker (ปรับตาม date picker ที่คุณใช้)
-// สมมติว่าเลือกวันที่เป็น input
-await page.type('#car_date_possession0', getRandomDate()); // ตัวอย่างการกรอกวันที่
-
+await page.click('#land_date_ownership0');
+await page.type('#land_date_ownership0',getRandomDate()); // ตัวอย่างการกรอกวันที่
 // ใส่ readonly attribute กลับ
 await page.evaluate(() => {
-  const dateInput = document.getElementById('car_date_possession0');
+  const dateInput = document.getElementById('land_date_ownership0');
   dateInput.setAttribute('readonly', '');
 });
+await page.waitForTimeout(500);
 
-await page.evaluate(() => {
-  const dateInput = document.getElementById('car_date_ownership0');
-  dateInput.removeAttribute('readonly');
-});
-
-// คลิกเพื่อเปิด date picker
-await page.click('#car_date_ownership0');
-
-// เลือกวันที่ใน date picker (ปรับตาม date picker ที่คุณใช้)
-// สมมติว่าเลือกวันที่เป็น input
-await page.type('#car_date_ownership0', getRandomDate()); // ตัวอย่างการกรอกวันที่
-
-// ใส่ readonly attribute กลับ
-await page.evaluate(() => {
-  const dateInput = document.getElementById('car_date_ownership0');
-  dateInput.setAttribute('readonly', '');
-});
+await page.fill("#land_current_ownership0", generateRandomData('text',20));
+await page.fill("#land_estimate0", generateRandomData('number',12));
 
 
-
-
-
-await page.fill("#car_current_ownership0", generateRandomData('text',5) + " " +  generateRandomData('text',5));
+//จบหลักประกัน
 
 // await selectRandomOption(page, 'select#bt_code');
 // await selectRandomOption(page, 'select#installment_per');
@@ -959,6 +986,6 @@ sendPhotoToTelegram(screenshotPath2);
 // Run the task immediately and then every 5 minutes
 // performTask();
 // setInterval(performTask, 5 * 60 * 1000); // 5 minutes in milliseconds
-// module.exports = {
-//   performTask
-// };
+module.exports = {
+  performTask
+};
